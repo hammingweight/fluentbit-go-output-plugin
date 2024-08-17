@@ -7,6 +7,7 @@ import (
 
 	"github.com/fluent/fluent-bit-go/output"
 )
+import "time"
 
 //export FLBPluginRegister
 func FLBPluginRegister(ctx unsafe.Pointer) int {
@@ -22,27 +23,24 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 //export FLBPluginFlush
 func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 	dec := output.NewDecoder(data, int(length))
-	var records []map[string]string
 	for {
 		ret, ts, record := output.GetRecord(dec)
 		if ret != 0 {
 			break
 		}
 
-		fmt.Println(ts)
 		t := ts.(output.FLBTime).Time
-		fmt.Println(t)
 
 		r := make(map[string]string)
 		for k, v := range record {
 			key := k.(string)
 
 			var val string
-			switch v.(type) {
+			switch v := v.(type) {
 			case []uint8:
-				val = string(v.([]uint8))
+				val = string(v)
 			case string:
-				val = v.(string)
+				val = v
 			case nil:
 				val = ""
 			default:
@@ -50,9 +48,7 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 			}
 			r[key] = val
 		}
-		r["tag"] = C.GoString(tag)
-		records = append(records, r)
-		fmt.Println(records)
+		fmt.Printf("%s: %s %s\n", C.GoString(tag), t.Format(time.RFC3339), r)
 	}
 
 	return output.FLB_OK
