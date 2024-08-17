@@ -2,6 +2,7 @@ package main
 
 import (
 	"C"
+	"encoding/json"
 	"fmt"
 	"unsafe"
 
@@ -29,8 +30,6 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 			break
 		}
 
-		t := ts.(output.FLBTime).Time
-
 		r := make(map[string]string)
 		for k, v := range record {
 			key := k.(string)
@@ -48,7 +47,8 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 			}
 			r[key] = val
 		}
-		fmt.Printf("%s: %s %s\n", C.GoString(tag), t.Format(time.RFC3339), r)
+		jsonString, _ := json.Marshal(r)
+		fmt.Printf("%s: %s %s\n", C.GoString(tag), ts.(output.FLBTime).Time.Format(time.RFC3339), jsonString)
 	}
 
 	return output.FLB_OK
