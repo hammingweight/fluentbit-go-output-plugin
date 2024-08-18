@@ -1,4 +1,4 @@
-module hello
+module github.com/hammingweight/fluentbit-go-output-plugin
 
 go 1.23.0
 
